@@ -1,0 +1,338 @@
+{
+
+        "EventClass": "Http_Activity",
+        "Description": "This config receives the nginx access log and converts them to the OCSF format. (The OCSF specification: https://schema.ocsf.io/classes/http_activity). The LogField maps to an OCSF log field and the SourceField is maps to a field of your log entity.",
+        "LogBucket": "<AWS Security Lake Bucket>",
+        "LogPath": "<Path of your AWS Security Lake Bucket/>",
+        "Fields":
+        [
+            {
+                "LogField": "cloud",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Custom",
+                "DataType": "Nested",
+                "Struct":
+                [
+                    {
+                        "LogField": "region",
+                        "SourceField": "region",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""
+                    },
+                    {
+                        "LogField": "provider",
+                        "SourceField": "",
+                        "DataType": "UTF8",
+                        "DefaultValue": "AWS"
+                    }
+                ],
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "activity_id",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "INT32",
+                "DefaultValue": "4"
+            },
+            {
+                "LogField": "activity_name",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "UTF8",
+                "DefaultValue": "Open"
+            },
+            {
+                "LogField": "app_name",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Context",
+                "DataType": "UTF8",
+                "DefaultValue": "nginx"
+            },
+            {
+                "LogField": "category_name",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "UTF8",
+                "DefaultValue": "Network Activity"
+            },
+            {
+                "LogField": "category_uid",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "INT32",
+                "DefaultValue": "4"
+            },
+            {
+                "LogField": "class_name",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "UTF8",
+                "DefaultValue": "HTTP Activity"
+            },
+            {
+                "LogField": "class_uid",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "INT32",
+                "DefaultValue": "4002"
+            },
+            {
+                "LogField": "connection_info",
+                "Description": "The network connection information.{direction_id:1Inbound;2Outbound,protocol_num:6tcp;17udp,protocol_name:tcp}",
+                "Struct":
+                [
+                    {
+                        "LogField": "protocol_num",
+                        "SourceField": "",
+                        "DataType": "INT32",
+                        "DefaultValue": "6"
+                    },
+                    {
+                        "LogField": "protocol_name",
+                        "SourceField": "",
+                        "DataType": "UTF8",
+                        "DefaultValue": "tcp"
+                    }
+                ],
+                "Group": "Primary",
+                "DataType": "Nested",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "data",
+                "Description": "Additional data that is associated with the event.",
+                "SourceField": "",
+                "Group": "Context",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "dst_endpoint",
+                "Description": "The responder (server) in a network connection.{hostname,ip,instance_uid,port,interface_uid,svc_name,uid}",
+                "Struct":
+                [
+                    {
+                        "LogField": "hostname",
+                        "SourceField": "hostname",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""
+                    },
+                    {
+                        "LogField": "ip",
+                        "SourceField": "private_ip",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""
+                    },
+                    {
+                        "LogField": "port",
+                        "SourceField": "",
+                        "DataType": "UTF8",
+                        "DefaultValue": "80"
+                        
+                    }
+                ],
+                "Group": "Primary",
+                "DataType": "Nested",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "time",
+                "Description": "The normalized event occurrence time.",
+                "SourceField": "time",
+                "Group": "Occurrence",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "http_request",
+                "Description": "",
+                "SourceField": "",
+                "Group": "",
+                "DataType": "UTF8",
+                "Required": true,
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "http_response",
+                "Description": "",
+                "SourceField": "",
+                "Group": "",
+                "DataType": "UTF8",
+                "Required": true,
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "http_status",
+                "Description": "",
+                "SourceField": "status",
+                "Group": "Primary",
+                "DataType": "INT32",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "proxy",
+                "Description": "If a proxy connection is present, the connection from the client to the proxy server.{hostname,ip,port,svc_name,uid}",
+                "Struct":
+                [
+                    {
+                        "LogField": "ip",
+                        "SourceField": "proxy_host",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""
+                    },
+                    {
+                        "LogField": "port",
+                        "SourceField": "proxy_port",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""               
+                        
+                    }
+                ],
+                "Group": "Primary",
+                "DataType": "Nested",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "raw_data",
+                "Description": "The event data as received from the event source.",
+                "SourceField": "",
+                "Group": "Context",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "severity",
+                "Description": "The event severity, as defined by the event source.",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "severity_id",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "INT32",
+                "DefaultValue": "1"
+            },
+            {
+                "LogField": "src_endpoint",
+                "Description": "The initiator (client) of the network connection.{hostname,ip,instance_uid,port,interface_uid,svc_name,uid}",
+                "Struct":
+                [
+                    {
+                        "LogField": "hostname",
+                        "SourceField": "remote_addr",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""
+                    },
+                    {
+                        "LogField": "ip",
+                        "SourceField": "remote_addr",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""
+                    },
+                    {
+                        "LogField": "port",
+                        "SourceField": "",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""                   
+                    }
+                ],
+                "Group": "Primary",
+                "DataType": "Nested",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "remote_addr",
+                "Description": "",
+                "SourceField": "remote_addr",
+                "Group": "Custom",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "request_uri",
+                "Description": "",
+                "SourceField": "request_uri",
+                "Group": "Custom",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "http_referer",
+                "Description": "",
+                "SourceField": "http_referer",
+                "Group": "Custom",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "user_agent",
+                "Description": "",
+                "SourceField": "http_user_agent",
+                "Group": "Custom",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "method",
+                "Description": "",
+                "SourceField": "request_method",
+                "Group": "Custom",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "traffic",
+                "Description": "The network traffic refers to the amount of data moving across a network at a given point of time. Intended to be used alongside Network Connection.",
+                "Struct":
+                [
+                    {
+                        "LogField": "bytes",
+                        "SourceField": "body_bytes_sent",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""
+                    },
+                    {
+                        "LogField": "packets",
+                        "SourceField": "",
+                        "DataType": "UTF8",
+                        "DefaultValue": ""
+                    }
+                ],
+                "Group": "Primary",
+                "DataType": "Nested",
+                "Required": false,
+                "DefaultValue": ""
+            },
+            {
+                "LogField": "type_uid",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "INT32",
+                "DefaultValue": "400204"
+            },
+            {
+                "LogField": "type_name",
+                "Description": "",
+                "SourceField": "",
+                "Group": "Classification",
+                "DataType": "UTF8",
+                "DefaultValue": ""
+            }
+
+        ]
+
+}
