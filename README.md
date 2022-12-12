@@ -10,6 +10,11 @@ We provided a sample configuration for Nginx: [log-schema-config.json](security-
 - Create custom source for Nginx on AWS Security Lake Console.
 - Setup a log collector(e.g.: Fluent-bit) on the Nginx Web Server.
 - Config the log collector(e.g.: Fluent-bit) output to a Kinesis Data Stream.
-- Modify the config file for log fields mapping, the LogField maps to an OCSF log field and the SourceField is maps to a field of your log entity.
+- Clone repositority, modify the config file for log fields mapping
+  - Change the LogBucket, LogPath and fields mapping.
+  - Upload configuration file to a S3 bucket.
 - Modify the SAM template(template.yaml) and deploy the Lambda function.
+  - Change the values of Role, Stream and ConfigurationFile properties.
+  - Run command: ```cd security-lake-custom-source-ingestion-lambda && npm install```
+  - Use SAM CLI or Cloud9 to deploy.
 - Monitor the Lambda execution in CloudWatch Logs.
