@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ConfigurationFileS3Bucket:
+    Description: 'S3 Bucket of the configuration file(e.g.: my-config-bucket'
+    Type: String
+  ConfigurationFileS3Key:
+    Description: 'S3 object Key of the configuration file(e.g.: config/schema.json)'
+    Type: String
+  LambdaS3Bucket:
+    Description: 'S3 bucket for Lambda code package(e.g.: mybucket).'
+    Type: String
+  LambdaS3Key:
+    Description: 'S3 object key for Lambda code package(e.g.: packages/files/lambda-deploy.zip).'
+    Type: String
+  DataLakeS3Bucket:
+    Description: Security Lake's S3 bucket
+    Type: String
+  KinesisDataStream:
+    Description: Arn of Kinesis Data Stream
+    Type: String
+
+Resources:
+  SecurityLakeLogsIngestionLambda:
+    Type: 'AWS::Lambda::Function'
+    DependsOn: LambdaIAMRole
+    Properties: 
+      Code: 
+        S3Bucket: !Ref LambdaS3Bucket
+        S3Key: !Ref LambdaS3Key
+      Environment:
+        Variables:
+          ConfigurationFile: 
+            !Join
+              - ''
+              - - 's3://'
+                - !Ref ConfigurationFileS3Bucket
+                - '/'
+                - !Ref ConfigurationFileS3Key
+      EphemeralStorage:
+        Size: 1024
+      Handler: app.lambdaHandler
+      MemorySize: 1024
+      Role: !GetAtt LambdaIAMRole.Arn
+      Runtime: nodejs16.x
+
+  LambdaEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        !Ref KinesisDataStream
+      FunctionName:
+        !GetAtt SecurityLakeLogsIngestionLambda.Arn
+      StartingPosition: 'TRIM_HORIZON'
+      BatchSize: 10000
+
+  LambdaIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: SecurityLakeCustomLogsLambdaAccessS3Policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: 's3:PutObject'
+                Resource: 
+                  - !Join
+                    - ''
+                    - - 'arn:'
+                      - !Ref AWS::Partition
+                      - ':s3:::'
+                      - !Ref DataLakeS3Bucket
+                  - !Join
+                    - ''
+                    - - 'arn:'
+                      - !Ref AWS::Partition
+                      - ':s3:::'
+                      - !Ref DataLakeS3Bucket
+                      - '/ext/*'
+              - Effect: Allow
+                Action: 's3:GetObject'
+                Resource: 
+                  !Sub 
+                    - 'arn:aws:s3:::${Bucket}/*'
+                    - { Bucket: !Ref ConfigurationFileS3Bucket }
+              - Effect: Allow
+                Action: 
+                  - 'kinesis:GetRecords'
+                  - 'kinesis:GetShardIterator'
+                  - 'kinesis:DescribeStream'
+                  - 'kinesis:ListShards'
+                  - 'kinesis:ListStreams'
+                Resource:
+                  !Ref KinesisDataStream
+              - Effect: Allow
+                Action: 'logs:CreateLogGroup'
+                Resource:
+                  !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 
+                  !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+               
+
+Outputs:
+  LambdaArn:
+    Description: ''
+    Value: !GetAtt SecurityLakeLogsIngestionLambda.Arn

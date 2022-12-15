@@ -58,6 +58,7 @@ exports.lambdaHandler = async (event, context) => {
         let awsVars = constructAwsContext(region, accountId);
         data.forEach(element => {
             let sdata = decodeData(element.kinesis.data);
+            console.log('Received message:' + JSON.stringify(sdata));
             let currentEventHour = date.format(new Date(sdata.time), 'YYYYMMDDHH', true);
             if(eventHour == '')
                 eventHour = currentEventHour;
