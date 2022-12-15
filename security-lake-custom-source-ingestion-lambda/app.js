@@ -9,6 +9,9 @@
 // 5. Deploy this SAM template for Lambda function deployment.
 // 6. Test
 
+//Author: Liang Fengbiao
+//Data source from Kinesis Data Stream
+
 const fs = require('fs');
 const parquet = require('parquetjs')
 const date = require('date-and-time')
@@ -40,7 +43,17 @@ exports.lambdaHandler = async (event, context) => {
         return;
     }
     try{
-        await createSchema(configFile);
+        
+        let configJson = await getConfiguration(configFile);
+        if(configJson == undefined){
+            console.log('Configuration file is invalid.');
+            return;
+        }
+
+        logBucket = configJson.LogBucket;
+        logPath = configJson.LogPath;
+        await createSchemaAndTemplate(configJson);
+        
         let data = event.Records;
         let awsVars = constructAwsContext(region, accountId);
         data.forEach(element => {
@@ -66,7 +79,6 @@ exports.lambdaHandler = async (event, context) => {
     catch(e){
         
         console.log(e);
-
     }
 
         
@@ -122,8 +134,12 @@ function decodeData(b64data){
 }
 
 function parseLogRecord(template, logData){
-    for (const key in logData){
-        if(logData.hasOwnProperty(key)){
+    for (let key in logData){
+
+        if(typeof logData[key] == 'object'){
+            template = parseLogRecord(template, logData[key])
+        }
+        else{
             template = template.replaceAll('$' + key + '$', `${logData[key]}`);
         }
       }
@@ -137,57 +153,98 @@ function cleanUnusedVariables(template){
     return template;
 }
 
-async function createSchema(definitionFile){
+async function createSchemaAndTemplate(configJson){
 
-    let content = await getConfiguration(definitionFile)
-    let defJson = JSON.parse(content);
     let tmpTemplate = {};
-    let tmpFileSchema = {};
-    logBucket = defJson.LogBucket;
-    logPath = defJson.LogPath;
-    defJson.Fields.forEach(element => {
+    configJson.Fields.forEach(element => {
+        parquetSchema[element.LogField] = createNestedSchema(element);
+        tmpTemplate[element.LogField] = createNestedTemplate(element);
+   
+       });
+    template = JSON.stringify(tmpTemplate);
+    
+}
 
-        if(element.DataType == 'Nested'){
-            let subJson = {};
-            let node = {};
-            let fields = {};
-            let dtype = {};
-            element.Struct.forEach(subElement => {
-                if(subElement.SourceField != '')
-                    subJson[subElement.LogField] = '$' + subElement.SourceField + '$';
-                else
-                    subJson[subElement.LogField] = subElement.DefaultValue;
+
+function createNestedSchema(element){
+
+
+    let node = {};
+    let fields = {};
+    if(element.DataType == 'Nested'){
+        node['repeated'] = false;
+        element.Struct.forEach(subElement => {
+
+            if(subElement.DataType == 'Nested'){
+                node['repeated'] = false;
+                fields[subElement.LogField] = createNestedSchema(subElement,node);
+            }
+            else
                 fields[subElement.LogField] = { type: subElement.DataType };
-            })
-            tmpTemplate[element.LogField] = subJson;
-            node['repeated'] = false;
-            node['fields'] = fields;
-            tmpFileSchema[element.LogField] = node;
+    
+        });
+        node['fields'] = fields;
+    }
+    else{
+        node = { type: element.DataType };
+    }
+    return node;
+}
+
+function createNestedTemplate(element){
+
+    let subJson = {};
+    let node = {};
+    let fields = {};
+    let dtype = {};
+    if(element.DataType == 'Nested'){
+
+        element.Struct.forEach(subElement => {
+
+            if(subElement.DataType == 'Nested'){
+                subJson[subElement.LogField] = createNestedTemplate(subElement);
+            }
+            else{
+                if(subElement.SourceField != '')
+                subJson[subElement.LogField] = '$' + subElement.SourceField + '$';
+            else
+                subJson[subElement.LogField] = subElement.DefaultValue;
+            }
+
+        })
+
+    }
+    else
+    {
+        if(element.SourceField != undefined && element.SourceField != ''){
+            return '$' + element.SourceField + '$';
         }
         else
         {
-            if(element.SourceField != ''){
-                tmpTemplate[element.LogField] = '$' + element.SourceField + '$';
-            }
-            else
-            {
-                tmpTemplate[element.LogField] = element.DefaultValue;
-            }
-            tmpFileSchema[element.LogField] = { type: element.DataType };
+            return element.DefaultValue;
         }
-    })
-    template = JSON.stringify(tmpTemplate);
-    parquetSchema = tmpFileSchema;
-
+    }
+    return subJson;
+    
 }
 
 
 async function getConfiguration(configurationFile){
 
-    let res = S3Uri(configurationFile);
-    let params = {Bucket: res.bucket, Key: res.key};
-    let buffer = await (await s3.getObject(params).promise()).Body;
-    return Buffer.from(buffer).toString('UTF8');
+    try{
+        
+        let res = S3Uri(configurationFile);
+        let params = {Bucket: res.bucket, Key: res.key};
+        let buffer = await (await s3.getObject(params).promise()).Body;
+        let fileContent = Buffer.from(buffer).toString('UTF8');
+        if(fileContent == '')
+            return undefined;
+        else
+            return JSON.parse(fileContent);
+    }
+    catch(e){
+        console.log(e);
+        return undefined;
+    }
+    
 }
-
-
