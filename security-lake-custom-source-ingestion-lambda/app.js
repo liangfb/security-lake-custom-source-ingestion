@@ -1,13 +1,11 @@
 //Author: Liang Fengbiao
-//Description: This Lambda uses for ingest logs from custom source into AWS Security Lake.
+//Description: Ingesting custom application logs into AWS Security Lake.
 // Usage:
-// Ingest logs from a Nginx web server into AWS Security Lake.
-// 1. Create Custom Source for Nginx on AWS Security Lake Console.
-// 2. Setup a log collector(e.g.: Fluent-bit) on the Nginx Web Server.
-// 3. Modify the output of log collector(e.g.: Fluent-bit) to a Kinesis Data Stream.
-// 4. Modify the config file for log fields mapping.
-// 5. Deploy this SAM template for Lambda function deployment.
-// 6. Test
+// 1. Create custom source for application in the AWS Security Lake console.
+// 2. Modify the log definition file for log field mappings.
+// 3. Deploy this Lambda function.
+// 4. Deploy the log collector(e.g.: Fluent-bit) on your server and set output to a supported channel(e.g., Kinesis Data Stream).
+// 5. Monitor the Lambda execution in CloudWatch Logs
 
 //Author: Liang Fengbiao
 //Data source from Kinesis Data Stream
