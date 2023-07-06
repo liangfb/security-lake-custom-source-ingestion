@@ -1,11 +1,11 @@
-# Ingest your custom log from applications into AWS Security Lake
+# Ingesting Custom Application Logs into AWS Security Lake
 
 This is a Serverless Application Model project that aims to receive the logs from your custom sources and save them into the AWS Security Lake using the OCSF format.
 
 ## Architecture:
 ![](images/security_lake_arch.drawio.png)
 
-## Features:
+## Key Features:
 - Define the structure of your log data and map to OCSF fields.
 - Receive log data from a channel(requires trigger Lambda function support).
 - Convert your log data to a standardized format based on your defined schema.
